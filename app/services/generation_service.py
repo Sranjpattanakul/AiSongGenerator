@@ -31,6 +31,8 @@ class GenerationService:
         song.status = result.status
         if result.audio_url:
             song.audio_file_url = result.audio_url
+        if result.image_url:
+            song.image_url = result.image_url
         if result.title:
             song.title = result.title
         if result.duration:
@@ -51,6 +53,8 @@ class GenerationService:
             song.status = result.status
             if result.audio_url:
                 song.audio_file_url = result.audio_url
+            if result.image_url:
+                song.image_url = result.image_url
             if result.duration:
                 song.duration = result.duration
             song.save()
@@ -61,6 +65,7 @@ class GenerationService:
             'task_id': result.task_id,
             'status': result.status,
             'audio_url': result.audio_url,
+            'image_url': result.image_url,
             'title': result.title,
             'duration': result.duration,
         }

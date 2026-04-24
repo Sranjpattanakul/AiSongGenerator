@@ -16,6 +16,7 @@ class Song(models.Model):
     )
     title = models.CharField(max_length=200)
     audio_file_url = models.URLField(blank=True, null=True)
+    image_url = models.URLField(blank=True, null=True)
     duration = models.CharField(max_length=10, blank=True)
     status = models.CharField(
         max_length=20,

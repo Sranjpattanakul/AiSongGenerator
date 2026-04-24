@@ -9,6 +9,9 @@ class MockSongGeneratorStrategy(SongGeneratorStrategy):
     PLACEHOLDER_AUDIO_URL = (
         'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
     )
+    PLACEHOLDER_IMAGE_URL = (
+        'https://picsum.photos/seed/mock-song/400/400'
+    )
 
     def generate(self, request: GenerationRequest) -> GenerationResult:
         task_id = f"mock-{uuid.uuid4().hex[:8]}"
@@ -16,6 +19,7 @@ class MockSongGeneratorStrategy(SongGeneratorStrategy):
             task_id=task_id,
             status='SUCCESS',
             audio_url=self.PLACEHOLDER_AUDIO_URL,
+            image_url=self.PLACEHOLDER_IMAGE_URL,
             title=request.title,
             duration='3:30',
             raw_data={
@@ -32,6 +36,7 @@ class MockSongGeneratorStrategy(SongGeneratorStrategy):
             task_id=task_id,
             status='SUCCESS',
             audio_url=self.PLACEHOLDER_AUDIO_URL,
+            image_url=self.PLACEHOLDER_IMAGE_URL,
             title='Mock Generated Song',
             duration='3:30',
             raw_data={'mock': True},

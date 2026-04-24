@@ -43,12 +43,14 @@ def generate_song(request):
         service = GenerationService()
         job = service.start_generation(prompt, song)
 
+        song.refresh_from_db()
         return JsonResponse({
             'success': True,
             'task_id': job.task_id,
             'song_id': song.id,
             'status': job.status,
             'audio_url': song.audio_file_url,
+            'image_url': song.image_url,
             'message': 'Song generation started',
         }, status=201)
 

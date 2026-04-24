@@ -87,6 +87,7 @@ class SunoSongGeneratorStrategy(SongGeneratorStrategy):
         our_status = self.STATUS_MAP.get(suno_status, 'QUEUED')
 
         audio_url = None
+        image_url = None
         title = None
         duration = None
 
@@ -94,6 +95,7 @@ class SunoSongGeneratorStrategy(SongGeneratorStrategy):
         if clips and isinstance(clips, list) and len(clips) > 0:
             clip = clips[0]
             audio_url = clip.get('audio_url')
+            image_url = clip.get('image_url')
             title = clip.get('title')
             raw_duration = clip.get('duration')
             if raw_duration is not None:
@@ -104,6 +106,7 @@ class SunoSongGeneratorStrategy(SongGeneratorStrategy):
             task_id=task_id,
             status=our_status,
             audio_url=audio_url,
+            image_url=image_url,
             title=title,
             duration=duration,
             raw_data=data,
