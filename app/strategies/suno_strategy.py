@@ -80,7 +80,7 @@ class SunoSongGeneratorStrategy(SongGeneratorStrategy):
             )
 
         data = response.json()
-        print(f"[Suno] generate response: {data}")
+        print(f"[Suno] generate → code={data.get('code')} msg={data.get('msg')} taskId={data.get('data', {}).get('taskId') if isinstance(data.get('data'), dict) else None}")
 
         nested = data.get('data') or {}
         task_id = (
@@ -116,11 +116,10 @@ class SunoSongGeneratorStrategy(SongGeneratorStrategy):
             )
 
         data = response.json()
-        print(f"[Suno] status response: {data}")
-
         inner = data.get('data') or {}
         if isinstance(inner, dict):
             suno_status = inner.get('status') or data.get('status', 'PENDING')
+            print(f"[Suno] status → taskId={task_id[:12]}... status={suno_status}")
             response_data = inner.get('response') or {}
             if isinstance(response_data, dict):
                 clips = response_data.get('sunoData') or response_data.get('clips') or []

@@ -15,6 +15,7 @@ class MockSongGeneratorStrategy(SongGeneratorStrategy):
 
     def generate(self, request: GenerationRequest) -> GenerationResult:
         task_id = f"mock-{uuid.uuid4().hex[:8]}"
+        print(f"[Mock] generate → taskId={task_id} status=SUCCESS title='{request.title}'")
         return GenerationResult(
             task_id=task_id,
             status='SUCCESS',
