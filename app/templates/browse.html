@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Browse — AI Song Creator{% endblock %}
+
+{% block content %}
+<div class="space-y-8 fade-in-up">
+
+    <div>
+        <h2 class="text-3xl font-extrabold">Browse Songs</h2>
+        <p class="text-slate-400 mt-1">Discover songs created by the community</p>
+    </div>
+
+    {% if songs %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        {% for song in songs %}
+        <div class="glass rounded-2xl overflow-hidden hover:border-white/20 transition-all group">
+
+            <div class="relative aspect-square bg-gradient-to-br from-indigo-900 to-purple-900 overflow-hidden">
+                {% if song.image_url %}
+                <img src="{{ song.image_url }}" alt="{{ song.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+                {% else %}
+                <div class="w-full h-full flex items-center justify-center">
+                    <svg class="w-14 h-14 text-white/20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                </div>
+                {% endif %}
+
+                <!-- Play overlay -->
+                {% if song.audio_file_url %}
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="p-4 space-y-3">
+                <div>
+                    <h3 class="font-semibold text-white truncate">{{ song.title }}</h3>
+                    <p class="text-slate-500 text-xs mt-0.5">
+                        {{ song.library.user.display_name }} · {{ song.created_at|date:"M d, Y" }}
+                        {% if song.duration %} · {{ song.duration }}{% endif %}
+                    </p>
+                </div>
+                {% if song.audio_file_url %}
+                <audio controls src="{{ song.audio_file_url }}" class="w-full rounded-lg" style="height:36px;"></audio>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="glass rounded-2xl p-16 flex flex-col items-center justify-center text-center space-y-5">
+        <div class="w-24 h-24 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+            <svg class="w-12 h-12 text-slate-600" fill="currentColor" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        </div>
+        <div>
+            <p class="text-white font-semibold text-lg">No songs to browse yet</p>
+            <p class="text-slate-500 text-sm mt-1">Be the first to create a song!</p>
+        </div>
+        <a href="/" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold px-6 py-3 rounded-xl transition-all shadow-lg shadow-purple-500/25">
+            Create a Song
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

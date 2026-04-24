@@ -4,8 +4,8 @@ from app.models import GenerationJob, Song, Prompt
 
 
 class GenerationService:
-    def __init__(self):
-        self.generator = get_generator()
+    def __init__(self, strategy: str = None):
+        self.generator = get_generator(strategy)
 
     def start_generation(self, prompt: Prompt, song: Song) -> GenerationJob:
         request = GenerationRequest(

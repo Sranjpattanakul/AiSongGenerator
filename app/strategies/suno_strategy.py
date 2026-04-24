@@ -30,16 +30,38 @@ class SunoSongGeneratorStrategy(SongGeneratorStrategy):
             'Content-Type': 'application/json',
         }
 
+    @staticmethod
+    def _duration_to_seconds(duration_str: str) -> int:
+        parts = duration_str.split(':')
+        return int(parts[0]) * 60 + int(parts[1]) if len(parts) == 2 else 180
+
+    TONE_LABELS = {
+        'MALE': 'male vocalist',
+        'FEMALE': 'female vocalist',
+        'CHILD': 'child singer',
+        'NEUTRAL': 'versatile vocalist',
+    }
+
     def generate(self, request: GenerationRequest) -> GenerationResult:
+        tone = self.TONE_LABELS.get(request.singer_tone.upper(), 'vocalist')
         prompt = (
-            f"{request.mood.lower()} {request.occasion.lower()} song. "
-            f"{request.description}"
+            f"A {request.mood.lower()} song for a {request.occasion.lower()} "
+            f"performed by a {tone}. "
+            f"The song is entirely about: {request.description}. "
+            f"Every verse, chorus, and bridge must stay on this theme."
         )
+        style_tags = f"{request.mood.lower()}, {request.occasion.lower()}, {request.singer_tone.lower()} voice"
+
+        callback_url = getattr(settings, 'SUNO_CALLBACK_URL', 'https://httpbin.org/post')
         payload = {
             'prompt': prompt,
             'title': request.title,
-            'style': f"{request.mood.lower()} {request.singer_tone.lower()}",
-            'make_instrumental': False,
+            'style': style_tags,
+            'instrumental': False,
+            'model': 'V4',
+            'customMode': False,
+            'callBackUrl': callback_url,
+            'duration': self._duration_to_seconds(request.requested_duration),
         }
 
         try:
@@ -58,7 +80,18 @@ class SunoSongGeneratorStrategy(SongGeneratorStrategy):
             )
 
         data = response.json()
-        task_id = data.get('taskId') or data.get('task_id', '')
+        print(f"[Suno] generate response: {data}")
+
+        nested = data.get('data') or {}
+        task_id = (
+            data.get('taskId') or data.get('task_id') or
+            (nested.get('taskId') if isinstance(nested, dict) else None) or
+            (nested.get('task_id') if isinstance(nested, dict) else None) or
+            ''
+        )
+
+        if not task_id:
+            raise GenerationAPIError(f'Suno API returned no task ID. Full response: {data}')
 
         return GenerationResult(
             task_id=task_id,
@@ -83,7 +116,20 @@ class SunoSongGeneratorStrategy(SongGeneratorStrategy):
             )
 
         data = response.json()
-        suno_status = data.get('status', 'PENDING')
+        print(f"[Suno] status response: {data}")
+
+        inner = data.get('data') or {}
+        if isinstance(inner, dict):
+            suno_status = inner.get('status') or data.get('status', 'PENDING')
+            response_data = inner.get('response') or {}
+            if isinstance(response_data, dict):
+                clips = response_data.get('sunoData') or response_data.get('clips') or []
+            else:
+                clips = inner.get('clips') or inner.get('sunoData') or data.get('clips') or []
+        else:
+            suno_status = data.get('status', 'PENDING')
+            clips = data.get('clips') or []
+
         our_status = self.STATUS_MAP.get(suno_status, 'QUEUED')
 
         audio_url = None
@@ -91,11 +137,10 @@ class SunoSongGeneratorStrategy(SongGeneratorStrategy):
         title = None
         duration = None
 
-        clips = data.get('clips') or data.get('data', [])
-        if clips and isinstance(clips, list) and len(clips) > 0:
+        if isinstance(clips, list) and len(clips) > 0:
             clip = clips[0]
-            audio_url = clip.get('audio_url')
-            image_url = clip.get('image_url')
+            audio_url = clip.get('sourceAudioUrl') or clip.get('audioUrl') or clip.get('audio_url')
+            image_url = clip.get('sourceImageUrl') or clip.get('imageUrl') or clip.get('image_url')
             title = clip.get('title')
             raw_duration = clip.get('duration')
             if raw_duration is not None:

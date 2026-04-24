@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Song Creator{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        @keyframes blob {
+            0%,100%{transform:translate(0,0) scale(1);}
+            33%{transform:translate(30px,-50px) scale(1.1);}
+            66%{transform:translate(-20px,20px) scale(0.9);}
+        }
+        @keyframes shimmer {
+            0%{background-position:-200% center;}
+            100%{background-position:200% center;}
+        }
+        @keyframes fadeInUp {
+            from{opacity:0;transform:translateY(20px);}
+            to{opacity:1;transform:translateY(0);}
+        }
+        @keyframes bar1{0%,100%{height:6px}50%{height:22px}}
+        @keyframes bar2{0%,100%{height:14px}50%{height:6px}}
+        @keyframes bar3{0%,100%{height:20px}50%{height:10px}}
+        @keyframes bar4{0%,100%{height:8px}50%{height:26px}}
+        @keyframes bar5{0%,100%{height:16px}50%{height:4px}}
+        @keyframes pulse-glow{0%,100%{box-shadow:0 0 20px rgba(168,85,247,.4);}50%{box-shadow:0 0 40px rgba(168,85,247,.8);}}
+
+        .blob{animation:blob 7s infinite ease-in-out;}
+        .blob2{animation:blob 7s 2s infinite ease-in-out;}
+        .blob3{animation:blob 7s 4s infinite ease-in-out;}
+        .fade-in-up{animation:fadeInUp .5s ease both;}
+        .delay-1{animation-delay:.1s;}
+        .delay-2{animation-delay:.2s;}
+        .shimmer-text{
+            background:linear-gradient(90deg,#c084fc,#f472b6,#818cf8,#c084fc);
+            background-size:200% auto;
+            -webkit-background-clip:text;background-clip:text;
+            -webkit-text-fill-color:transparent;
+            animation:shimmer 3s linear infinite;
+        }
+        .glass{
+            background:rgba(255,255,255,.04);
+            backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+            border:1px solid rgba(255,255,255,.08);
+        }
+        .eq-bar{border-radius:2px;animation-iteration-count:infinite;animation-timing-function:ease-in-out;}
+        .eq-bar-1{animation-name:bar1;animation-duration:.8s;}
+        .eq-bar-2{animation-name:bar2;animation-duration:.8s;animation-delay:.1s;}
+        .eq-bar-3{animation-name:bar3;animation-duration:.8s;animation-delay:.2s;}
+        .eq-bar-4{animation-name:bar4;animation-duration:.8s;animation-delay:.05s;}
+        .pulse-glow{animation:pulse-glow 2s ease-in-out infinite;}
+        select option{background:#1e1b4b;}
+    </style>
+</head>
+<body class="min-h-screen bg-[#060612] text-white overflow-x-hidden">
+
+    <!-- Background -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="blob  absolute top-[-15%] left-[-10%]  w-[600px] h-[600px] rounded-full bg-purple-700/20 blur-[100px]"></div>
+        <div class="blob2 absolute top-[30%]  right-[-15%] w-[500px] h-[500px] rounded-full bg-indigo-600/15 blur-[100px]"></div>
+        <div class="blob3 absolute bottom-[-10%] left-[25%] w-[550px] h-[550px] rounded-full bg-pink-700/15 blur-[100px]"></div>
+    </div>
+
+    <!-- Header / Nav -->
+    <header class="relative z-10 border-b border-white/5 glass sticky top-0">
+        <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
+            <a href="/" class="flex items-center gap-2.5 flex-shrink-0">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                </div>
+                <span class="font-bold tracking-tight hidden sm:block">AI Song Creator</span>
+            </a>
+
+            <nav class="flex items-center gap-1">
+                <a href="/" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all {% if active_page == 'home' %}bg-white/10 text-white{% else %}text-slate-400 hover:text-white hover:bg-white/5{% endif %}">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                    Create
+                </a>
+                <a href="/library/" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all {% if active_page == 'library' %}bg-white/10 text-white{% else %}text-slate-400 hover:text-white hover:bg-white/5{% endif %}">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg>
+                    My Library
+                </a>
+                <a href="/browse/" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all {% if active_page == 'browse' %}bg-white/10 text-white{% else %}text-slate-400 hover:text-white hover:bg-white/5{% endif %}">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                    Browse
+                </a>
+            </nav>
+
+            <div class="flex items-center gap-3 flex-shrink-0">
+                {% if user_picture %}
+                <img src="{{ user_picture }}" alt="{{ user_name }}" class="w-8 h-8 rounded-full object-cover ring-2 ring-purple-500/40">
+                {% else %}
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-sm font-bold">{{ user_initial }}</div>
+                {% endif %}
+                <span class="text-sm text-slate-300 hidden md:block">{{ user_name }}</span>
+                <a href="/auth/logout/" class="text-xs text-slate-500 hover:text-slate-300 transition px-3 py-1.5 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/10">Sign out</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="relative z-10 max-w-7xl mx-auto px-6 py-10">
+        {% block content %}{% endblock %}
+    </main>
+
+</body>
+</html>

@@ -1,184 +1,263 @@
-# AI Music Creator Platform
+# AiSongGenerator
 
-A Django-based AI music generation platform that uses the **Strategy design pattern** to support multiple interchangeable song-generation backends.
+AiSongGenerator is a Django-based AI song generation platform.  
+The system supports real song generation via the Suno API and a mock offline strategy for development and testing.
+
+This implementation was developed for **Exercise 4: Apply Strategy Pattern for Song Generation**, building on the domain layer from Exercise 3.
+
+---
+
+## Project Overview
+
+The system supports the following core flow:
+
+1. A **User** registers and logs in via Google OAuth or demo login.
+2. The user submits a **Prompt** (title, description, mood, occasion, singer tone, duration).
+3. The system generates a **Song** using the selected strategy (Mock or Suno API).
+4. Generated songs are stored in the user's **Library** with real-time status tracking.
+5. Songs can be favorited, shared via unique token links, and deleted.
+6. Saved **Drafts** allow users to resume incomplete prompts later.
+7. Completed songs appear on the **Browse** page for all users.
+
+---
+
+## Main Features
+
+- **Strategy Pattern** for song generation (Mock vs Suno API, swappable via env var or UI toggle)
+- **Mock strategy** — offline, deterministic, no API calls required
+- **Suno API strategy** — real AI generation via SunoApi.org
+- Google OAuth 2.0 authentication + demo login fallback
+- Full frontend UI (Django Templates, Tailwind CSS, Alpine.js)
+- Browse page for public songs
+- Library management: favorites, share links, delete, drafts
+- Real-time polling with live status counter
+
+---
+
+## Domain Entities
+
+- **User**
+- **Library**
+- **Song**
+- **Prompt**
+- **Draft**
+- **GenerationJob**
+- **ShareLink**
+- **PlaybackSession**
+- **EqualizerPreset**
+
+---
+
+## Domain Relationships
+
+- One **User** owns one **Library**
+- One **Library** contains many **Songs** and **Drafts**
+- One **Prompt** is linked to one **GenerationJob**
+- One **GenerationJob** tracks one **Song**
+- One **Song** can have many **ShareLinks**
+- One **User** has one **PlaybackSession**
+- One **User** has many **EqualizerPresets**
 
 ---
 
 ## Project Structure
 
-```
-project_root/
+```text
+AiSongGenerator/
 ├── app/
-│   ├── controllers/          # Request handlers (views)
-│   │   └── generation_controller.py
-│   ├── models/               # Domain models (one file per entity)
+│   ├── controllers/
+│   │   ├── auth_controller.py
+│   │   ├── home_controller.py
+│   │   ├── pages_controller.py
+│   │   ├── generation_controller.py
+│   │   ├── song_manager_controller.py
+│   │   ├── browse_controller.py
+│   │   └── playback_controller.py
+│   │
+│   ├── models/
 │   │   ├── user.py
 │   │   ├── library.py
-│   │   ├── song.py           # Song + GenerationStatus enum
-│   │   ├── prompt.py         # Prompt + Mood/Occasion/SingerTone enums
+│   │   ├── song.py
+│   │   ├── prompt.py
 │   │   ├── draft.py
-│   │   ├── generation.py     # GenerationJob
-│   │   ├── share.py          # ShareLink
-│   │   ├── playback.py       # PlaybackSession
-│   │   └── equalizer.py      # EqualizerPreset
-│   ├── routes/               # URL routing
-│   │   └── generation_urls.py
-│   ├── services/             # Business logic
-│   │   └── generation_service.py
-│   ├── strategies/           # Strategy Pattern
-│   │   ├── base.py           # Abstract interface (SongGeneratorStrategy)
-│   │   ├── factory.py        # Centralized strategy selection
-│   │   ├── mock_strategy.py  # Offline mock implementation
-│   │   ├── suno_strategy.py  # Suno API implementation
-│   │   └── exceptions.py     # Custom generation exceptions
-│   └── migrations/
+│   │   ├── generation.py
+│   │   ├── share.py
+│   │   ├── playback.py
+│   │   └── equalizer.py
+│   │
+│   ├── routes/
+│   │   ├── auth_urls.py
+│   │   ├── generation_urls.py
+│   │   ├── manager_urls.py
+│   │   ├── browse_urls.py
+│   │   └── playback_urls.py
+│   │
+│   ├── services/
+│   │   ├── generation_service.py
+│   │   ├── song_manager_service.py
+│   │   ├── browse_service.py
+│   │   └── playback_service.py
+│   │
+│   ├── strategies/                   ← Strategy Pattern
+│   │   ├── base.py                   ← Abstract interface
+│   │   ├── factory.py                ← Centralized strategy selection
+│   │   ├── mock_strategy.py          ← Offline mock implementation
+│   │   ├── suno_strategy.py          ← Suno API implementation
+│   │   └── exceptions.py
+│   │
+│   └── templates/
+│       ├── base.html
+│       ├── login.html
+│       ├── home.html
+│       ├── library.html
+│       └── browse.html
+│
 ├── config/
 │   ├── settings.py
 │   ├── urls.py
 │   └── wsgi.py
-├── .env                      # Secret config — NOT committed
-├── .env.example              # Template showing required variables
-├── .gitignore
-└── manage.py
+│
+├── .env.example
+├── manage.py
+└── README.md
 ```
 
 ---
 
-## Setup
+## Installation and Setup
 
-### 1. Install dependencies
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/Sranjpattanakul/AiSongGenerator.git
+cd AiSongGenerator
+```
+
+### 2. Install dependencies
 
 ```bash
 pip install django requests python-dotenv
 ```
 
-### 2. Configure environment
-
-Copy `.env.example` to `.env`:
+### 3. Create a `.env` file
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and set your values (see sections below for mock vs suno).
+```env
+SECRET_KEY=your-django-secret-key
+DEBUG=True
+GENERATOR_STRATEGY=mock
+SUNO_API_KEY=your_api_key_here
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+```
 
-### 3. Apply migrations
+Never commit `.env` — it contains secrets. Only `.env.example` is committed.
+
+### 4. Apply migrations
 
 ```bash
 python manage.py migrate
 ```
 
-### 4. Start the server
+### 5. Run the application
 
 ```bash
 python manage.py runserver
 ```
 
+Open `http://localhost:8000` — log in with Google or use the demo login form.
+
 ---
 
-## Running in Mock Mode (offline, no API key needed)
+## Strategy Pattern: Song Generation
 
-In your `.env` file set:
+This project implements the **Strategy design pattern** to allow swappable song generation behavior without modifying controllers or services.
 
+### Strategy Interface
+
+Defined in `app/strategies/base.py`:
+
+```python
+class SongGeneratorStrategy(ABC):
+    @abstractmethod
+    def generate(self, request: GenerationRequest) -> GenerationResult:
+        ...
+
+    @abstractmethod
+    def get_status(self, task_id: str) -> GenerationResult:
+        ...
 ```
+
+Both strategies implement this same interface.
+
+---
+
+### Running in Mock Mode (Offline)
+
+Set in `.env` or select **Mock (Instant)** in the UI:
+
+```env
 GENERATOR_STRATEGY=mock
 ```
 
-The mock strategy returns deterministic, pre-defined output immediately — no network access required. This is the default.
+Mock mode produces a deterministic song with a fixed placeholder audio URL. No API key or internet connection required.
 
-**Test it:**
-
-```bash
-curl -X POST http://127.0.0.1:8000/api/generation/generate/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Happy Birthday Song",
-    "description": "A joyful song for my friend'\''s birthday",
-    "occasion": "BIRTHDAY",
-    "mood": "HAPPY",
-    "singer_tone": "FEMALE",
-    "requested_duration": "3:00",
-    "user_email": "demo@example.com"
-  }'
-```
-
-Expected response:
+**Example output:**
 
 ```json
 {
   "success": true,
   "task_id": "mock-5052fcbc",
-  "song_id": 1,
   "status": "SUCCESS",
-  "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-  "message": "Song generation started"
+  "audio_url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
 }
 ```
 
 ---
 
-## Running in Suno Mode (live API)
+### Running in Suno Mode (Live API)
 
-### Where to put the Suno API key
+Set in `.env` or select **Suno AI (Real)** in the UI:
 
-**Never commit your API key.** Add it only to your local `.env` file:
-
-```
+```env
 GENERATOR_STRATEGY=suno
-SUNO_API_KEY=your-actual-key-from-sunoapi-org
+SUNO_API_KEY=your_api_key_here
 ```
 
-The `.env` file is listed in `.gitignore` and will never be committed.
+Suno mode calls `POST https://api.sunoapi.org/api/v1/generate`, stores the returned `taskId`, and polls for status every 3 seconds until `SUCCESS` or `FAILED`.
 
-**Start generation:**
+**Example output (initial response):**
 
-```bash
-curl -X POST http://127.0.0.1:8000/api/generation/generate/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Graduation Anthem",
-    "description": "An energetic song celebrating graduation day",
-    "occasion": "GRADUATION",
-    "mood": "ENERGETIC",
-    "singer_tone": "NEUTRAL",
-    "requested_duration": "3:30",
-    "user_email": "demo@example.com"
-  }'
+```json
+{
+  "success": true,
+  "task_id": "abc123xyz",
+  "status": "QUEUED",
+  "audio_url": null
+}
 ```
 
-The response will contain a `task_id`. Use it to poll for the result:
-
-```bash
-curl http://127.0.0.1:8000/api/generation/status/<task_id>/
-```
-
-Suno status values: `QUEUED` → `GENERATING` → `SUCCESS` / `FAILED`
+Status flow: `QUEUED` → `GENERATING` → `SUCCESS` / `FAILED`
 
 ---
 
-## Strategy Pattern Design
+### Strategy Selection
 
-The generation behavior is fully swappable via the `GENERATOR_STRATEGY` environment variable. The selection is **centralized in one place**: `app/strategies/factory.py`.
+Selection is centralized in `app/strategies/factory.py`:
 
-```
-GenerationRequest
-      │
-      ▼
-SongGeneratorStrategy  (abstract base — app/strategies/base.py)
-      │
-      ├── MockSongGeneratorStrategy   (app/strategies/mock_strategy.py)
-      │       • No external calls
-      │       • Deterministic output
-      │       • Always returns SUCCESS
-      │
-      └── SunoSongGeneratorStrategy   (app/strategies/suno_strategy.py)
-              • POST /api/v1/generate → returns taskId
-              • GET  /api/v1/generate/record-info → polls status
-
-factory.get_generator()  ← reads GENERATOR_STRATEGY setting
+```python
+def get_generator(strategy: str = None) -> SongGeneratorStrategy:
+    if not strategy:
+        strategy = getattr(settings, 'GENERATOR_STRATEGY', 'mock')
+    if strategy.lower() == 'suno':
+        return SunoSongGeneratorStrategy()
+    return MockSongGeneratorStrategy()
 ```
 
-There are no `if strategy == ...` checks scattered in the codebase — only in `factory.py`.
+No `if/else` logic is scattered through controllers or services.
 
 ---
 
@@ -187,34 +266,27 @@ There are no `if strategy == ...` checks scattered in the codebase — only in `
 | Method | URL | Description |
 |--------|-----|-------------|
 | `POST` | `/api/generation/generate/` | Submit a song generation request |
-| `GET`  | `/api/generation/status/<task_id>/` | Poll generation status |
-
-### POST `/api/generation/generate/` — Request body
-
-| Field | Type | Required | Values |
-|-------|------|----------|--------|
-| `title` | string | yes | Song title |
-| `description` | string | no | Prompt description |
-| `occasion` | string | yes | `BIRTHDAY`, `WEDDING`, `ANNIVERSARY`, `GRADUATION`, `CELEBRATION`, `CUSTOM` |
-| `mood` | string | yes | `HAPPY`, `SAD`, `ENERGETIC`, `CALM`, `ROMANTIC`, `INSPIRATIONAL` |
-| `singer_tone` | string | yes | `MALE`, `FEMALE`, `NEUTRAL`, `CHILD` |
-| `requested_duration` | string | no | e.g. `"3:00"` |
-| `user_email` | string | no | Identifies the user (default: `demo@example.com`) |
+| `GET` | `/api/generation/status/<task_id>/` | Poll generation status |
+| `PATCH` | `/api/library/<user_id>/songs/<song_id>/favorite/` | Toggle favorite |
+| `DELETE` | `/api/library/<user_id>/songs/<song_id>/delete/` | Delete song |
+| `POST` | `/api/browse/<user_id>/songs/<song_id>/share/` | Create share link |
+| `POST` | `/api/library/<user_id>/drafts/save/` | Save draft |
+| `DELETE` | `/api/library/<user_id>/drafts/<draft_id>/delete/` | Delete draft |
 
 ---
 
-## Domain Model
+## Notes
 
-Entities implemented as Django models:
+- Authentication implemented via Google OAuth 2.0 redirect flow
+- Real AI generation implemented via Suno API strategy
+- Frontend UI implemented with Django Templates, Tailwind CSS, and Alpine.js
+- Strategy selection controlled by `GENERATOR_STRATEGY` env var or per-request UI toggle
+- `.env` file must never be committed — it contains secrets
 
-- **User** — email, display_name, google_id
-- **Library** — one-to-one with User; contains Songs
-- **Song** — title, audio_file_url, duration, status (GenerationStatus), is_favorite, play_count
-- **Prompt** — title, description, occasion, mood, singer_tone, requested_duration
-- **Draft** — saved Prompt state; composition of Prompt + Library
-- **GenerationJob** — links Song ↔ Prompt, stores task_id and status
-- **ShareLink** — unique_token, expires_at, access_count
-- **PlaybackSession** — one-to-one with User; current_position, is_playing, volume, looping
-- **EqualizerPreset** — bass_level, mid_level, treble_level per User
+---
 
-Enumerations: `GenerationStatus`, `Mood`, `Occasion`, `SingerTone`
+## Author
+
+Name: `Sran Jarurangsripattanakul`  
+Course: Principle of Software Design  
+Exercise: **Exercise 4 – Apply Strategy Pattern for Song Generation**

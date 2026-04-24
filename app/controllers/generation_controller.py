@@ -40,7 +40,7 @@ def generate_song(request):
             title=prompt.title,
         )
 
-        service = GenerationService()
+        service = GenerationService(strategy=data.get('strategy'))
         job = service.start_generation(prompt, song)
 
         song.refresh_from_db()
@@ -63,7 +63,8 @@ def generate_song(request):
 @require_http_methods(['GET'])
 def generation_status(request, task_id):
     try:
-        service = GenerationService()
+        strategy = 'mock' if task_id.startswith('mock-') else 'suno'
+        service = GenerationService(strategy=strategy)
         result = service.check_status(task_id)
         return JsonResponse({'success': True, **result})
     except GenerationError as exc:

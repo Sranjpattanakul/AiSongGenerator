@@ -80,3 +80,8 @@ GENERATOR_STRATEGY = os.environ.get('GENERATOR_STRATEGY', 'mock')
 
 # Suno API credentials — set SUNO_API_KEY in .env, never commit the key
 SUNO_API_KEY = os.environ.get('SUNO_API_KEY', '')
+
+# Google OAuth — set GOOGLE_CLIENT_ID in .env
+# Get it from: https://console.cloud.google.com/ → APIs & Services → Credentials
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')

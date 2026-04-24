@@ -2,12 +2,14 @@ from django.conf import settings
 from .base import SongGeneratorStrategy
 
 
-def get_generator() -> SongGeneratorStrategy:
+def get_generator(strategy: str = None) -> SongGeneratorStrategy:
     """Centralized strategy selection.
-    Reads GENERATOR_STRATEGY from Django settings (set via environment variable).
+    Uses the provided strategy string, or falls back to GENERATOR_STRATEGY setting.
     Returns MockSongGeneratorStrategy for 'mock', SunoSongGeneratorStrategy for 'suno'.
     """
-    strategy = getattr(settings, 'GENERATOR_STRATEGY', 'mock').lower()
+    if not strategy:
+        strategy = getattr(settings, 'GENERATOR_STRATEGY', 'mock')
+    strategy = strategy.lower()
 
     if strategy == 'suno':
         from .suno_strategy import SunoSongGeneratorStrategy
