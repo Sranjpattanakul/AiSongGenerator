@@ -1,0 +1,45 @@
+@base_url = http://127.0.0.1:8000
+
+# ─────────────────────────────────────────
+# 1. MOCK GENERATION  (no API key needed)
+# ─────────────────────────────────────────
+### Generate song (mock strategy)
+POST {{base_url}}/api/generation/generate/
+Content-Type: application/json
+
+{
+  "title": "Birthday Blast",
+  "description": "An upbeat song celebrating my best friend's 25th birthday",
+  "occasion": "BIRTHDAY",
+  "mood": "HAPPY",
+  "singer_tone": "FEMALE",
+  "requested_duration": "3:00",
+  "strategy": "mock",
+  "user_email": "demo@example.com"
+}
+
+### Check mock status  (paste task_id from response above)
+# @name mockStatus
+GET {{base_url}}/api/generation/status/mock-xxxxxxxx
+
+
+# ─────────────────────────────────────────
+# 2. SUNO GENERATION  (requires SUNO_API_KEY in .env)
+# ─────────────────────────────────────────
+### Generate song (Suno strategy)
+POST {{base_url}}/api/generation/generate/
+Content-Type: application/json
+
+{
+  "title": "Wedding Day",
+  "description": "A romantic song for a summer wedding by the beach",
+  "occasion": "WEDDING",
+  "mood": "ROMANTIC",
+  "singer_tone": "MALE",
+  "requested_duration": "3:30",
+  "strategy": "suno",
+  "user_email": "demo@example.com"
+}
+
+### Check Suno status  (paste taskId from response above)
+GET {{base_url}}/api/generation/status/REPLACE_WITH_TASK_ID
